@@ -12,14 +12,14 @@ Slides for my biweekly paper-reading meetings.
 slides/<date-name>/*.md ──(Marp)──> HTML ──(GitHub Actions)──> GitHub Pages
 ```
 
-- **Marp** turns Markdown into slides. `build.mjs` renders each `.md` with `@marp-team/marp-core`, applies the `gh-readme.css` theme from the same folder, and shows the `<!-- -->` speaker notes next to each slide.
+- **Marp** turns Markdown into slides. `build.mjs` renders each `.md` with `@marp-team/marp-core`, applies the `theme.css` theme from the same folder, and shows the `<!-- -->` speaker notes next to each slide.
 - **Index page**: `build.mjs` reads `title` and `description` from each deck's front matter and fills them into `index.template.html`.
 - **GitHub Actions** runs `node build.mjs` on every push to `main` and writes the result to `_site/`.
 - **GitHub Pages** publishes `_site/` as the website linked above.
 
 ## Adding a slide deck
 
-1. Create `slides/YYYYMMDD-name/` containing `YYYYMMDD-name.md`, `gh-readme.css`, and any images. The folder name must match the `.md` file name.
+1. Create `slides/YYYYMMDD-name/` containing `YYYYMMDD-name.md`, `theme.css`, and any images. The folder name must match the `.md` file name.
 2. Add `title` (full title) and `description` (one-line summary) to the front matter. The index page shows them directly:
 
    ```markdown
@@ -38,6 +38,6 @@ slides/<date-name>/*.md ──(Marp)──> HTML ──(GitHub Actions)──> G
 ## Local preview
 
 ```bash
-marp -p --theme gh-readme.css slides/20261013-HiKV/20261013-HiKV.md   # preview window
+marp -p --theme theme.css slides/20261013-HiKV/20261013-HiKV.md   # preview window
 node build.mjs                                                        # full build into _site/
 ```
