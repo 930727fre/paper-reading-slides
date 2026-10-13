@@ -1,0 +1,139 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Paper Reading Slides</title>
+<style>
+/* 配色沿用 gh-readme.css */
+:root {
+  --fg: #1f2328; --muted: #59636e; --line: #d1d9e0; --soft: #f6f8fa;
+  --accent: #0969da; --bg: #ffffff; --hover: #f6f8fa;
+  --shadow: 0 1px 0 rgba(31,35,40,.04);
+}
+:root { color-scheme: light; }   /* 固定淺色，和投影片一致 */
+* { box-sizing: border-box; }
+body {
+  margin: 0; background: var(--bg); color: var(--fg);
+  font: 14px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans TC", "PingFang TC", Helvetica, Arial, sans-serif;
+}
+a { color: var(--accent); text-decoration: none; }
+a:hover { text-decoration: underline; }
+
+/* 頂部列：像 github.com 的 header */
+.topbar { background: var(--soft); border-bottom: 1px solid var(--line); }
+.topbar-inner {
+  max-width: 1012px; margin: 0 auto; padding: 16px 24px;
+  display: flex; align-items: center; gap: 12px;
+}
+.logo { width: 32px; height: 32px; fill: var(--fg); flex: none; }
+.site { font-size: 14px; font-weight: 600; color: var(--fg); }
+.site small { display: block; font-weight: 400; color: var(--muted); font-size: 12px; }
+
+main { max-width: 1012px; margin: 0 auto; padding: 24px; }
+
+/* 標題列 + 搜尋框 */
+.toolbar { display: flex; align-items: center; gap: 16px; margin-bottom: 16px; flex-wrap: wrap; }
+h1 { font-size: 20px; font-weight: 600; margin: 0; flex: 1; min-width: 200px; }
+h1 .count {
+  display: inline-block; min-width: 20px; padding: 0 6px; margin-left: 8px;
+  font-size: 12px; font-weight: 500; line-height: 18px; text-align: center;
+  background: rgba(129,139,152,.18); border-radius: 2em; color: var(--fg);
+}
+.search { position: relative; width: 280px; max-width: 100%; }
+.search svg { position: absolute; left: 10px; top: 9px; fill: var(--muted); pointer-events: none; }
+.search input {
+  width: 100%; height: 32px; padding: 0 36px 0 32px; color: var(--fg);
+  background: var(--bg); border: 1px solid var(--line); border-radius: 6px;
+  font: inherit; box-shadow: var(--shadow);
+}
+.search input::placeholder { color: var(--muted); }
+.search input:focus { outline: 2px solid var(--accent); outline-offset: -1px; border-color: var(--accent); }
+.search kbd {
+  position: absolute; right: 8px; top: 6px; padding: 0 5px; font: 11px/18px ui-monospace, Menlo, monospace;
+  color: var(--muted); border: 1px solid var(--line); border-radius: 4px; background: var(--soft);
+}
+
+/* 清單：圓角外框，像 GitHub 的檔案表格 */
+.box { border: 1px solid var(--line); border-radius: 6px; overflow: hidden; }
+.box-head {
+  display: flex; justify-content: space-between; padding: 8px 16px;
+  background: var(--soft); border-bottom: 1px solid var(--line);
+  font-size: 12px; font-weight: 600; color: var(--muted);
+}
+ul { list-style: none; margin: 0; padding: 0; }
+.row {
+  display: flex; gap: 16px; align-items: flex-start; justify-content: space-between;
+  padding: 14px 16px; border-top: 1px solid var(--line);
+}
+.row:first-child { border-top: 0; }
+.row:hover { background: var(--hover); }
+.row .main { min-width: 0; }
+.title { font-size: 16px; font-weight: 600; line-height: 1.35; display: inline-block; }
+.desc { margin: 4px 0 0; color: var(--muted); font-size: 13px; line-height: 1.55; }
+time {
+  flex: none; color: var(--muted); font: 12px/22px ui-monospace, SFMono-Regular, Menlo, monospace;
+  white-space: nowrap;
+}
+.empty { display: none; padding: 40px 16px; text-align: center; color: var(--muted); }
+.box.none .empty { display: block; }
+
+footer { max-width: 1012px; margin: 0 auto; padding: 8px 24px 40px; color: var(--muted); font-size: 12px; }
+
+@media (max-width: 600px) {
+  .row { flex-direction: column; gap: 4px; }
+  .search { width: 100%; }
+}
+</style>
+</head>
+<body>
+<header class="topbar">
+  <div class="topbar-inner">
+    <svg class="logo" viewBox="0 0 16 16" aria-hidden="true"><path d="M2 2.75C2 1.784 2.784 1 3.75 1h2.5a.75.75 0 0 1 0 1.5h-2.5a.25.25 0 0 0-.25.25v10.5c0 .138.112.25.25.25h8.5a.25.25 0 0 0 .25-.25V7.5a.75.75 0 0 1 1.5 0v5.75A1.75 1.75 0 0 1 12.25 15h-8.5A1.75 1.75 0 0 1 2 13.25ZM13.78 1.22a.75.75 0 0 1 0 1.06L8.53 7.53a.75.75 0 0 1-1.06-1.06l5.25-5.25a.75.75 0 0 1 1.06 0Z" transform="translate(0 0)"/></svg>
+    <div class="site">Paper Reading<small>Biweekly meeting slides</small></div>
+  </div>
+</header>
+
+<main>
+  <div class="toolbar">
+    <h1>Slides<span class="count" id="count">{{COUNT}}</span></h1>
+    <label class="search">
+      <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><path d="M10.68 11.74a6 6 0 0 1-7.922-8.982 6 6 0 0 1 8.982 7.922l3.04 3.04a.749.749 0 0 1-.326 1.275.749.749 0 0 1-.734-.215ZM11.5 7a4.499 4.499 0 1 0-8.997 0A4.499 4.499 0 0 0 11.5 7Z"/></svg>
+      <input id="q" type="search" placeholder="搜尋標題或簡介" autocomplete="off">
+      <kbd>/</kbd>
+    </label>
+  </div>
+
+  <div class="box" id="box">
+    <div class="box-head"><span>標題</span><span>日期</span></div>
+    <ul id="list">
+{{ITEMS}}
+    </ul>
+    <div class="empty">找不到符合的簡報</div>
+  </div>
+</main>
+
+<script>
+(function () {
+  var q = document.getElementById('q'), box = document.getElementById('box'),
+      rows = Array.prototype.slice.call(document.querySelectorAll('#list .row')),
+      count = document.getElementById('count');
+  function apply() {
+    var k = q.value.trim().toLowerCase(), n = 0;
+    rows.forEach(function (r) {
+      var show = !k || r.getAttribute('data-q').indexOf(k) !== -1;
+      r.style.display = show ? '' : 'none';
+      if (show) n++;
+    });
+    count.textContent = n;
+    box.classList.toggle('none', n === 0);
+  }
+  q.addEventListener('input', apply);
+  document.addEventListener('keydown', function (e) {
+    if (e.key === '/' && document.activeElement !== q) { e.preventDefault(); q.focus(); }
+    else if (e.key === 'Escape' && document.activeElement === q) { q.value = ''; apply(); q.blur(); }
+  });
+})();
+</script>
+</body>
+</html>

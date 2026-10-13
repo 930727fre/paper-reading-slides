@@ -77,23 +77,23 @@ ${rows}`;
   entries.push({ name, title, description: meta.description });
 }
 
-const rowsHtml = entries.sort((a, b) => b.name.localeCompare(a.name))
-  .map(e => `<tr>
-    <td><a href="${e.name}/">${escapeHtml(e.title)}</a></td>
-    <td>${escapeHtml(e.description)}</td></tr>`).join('');
+// 主頁：樣式與版面放在 index.template.html，這裡只負責填入清單
+const items = entries.sort((a, b) => b.name.localeCompare(a.name)).map(e => {
+  const m = e.name.match(/^(\d{4})(\d{2})(\d{2})/);       // 資料夾開頭的 YYYYMMDD 當日期
+  const date = m ? `${m[1]}-${m[2]}-${m[3]}` : '';
+  const q = escapeHtml(`${e.title} ${e.description}`.toLowerCase());
+  return `      <li class="row" data-q="${q}">
+        <div class="main">
+          <a class="title" href="${e.name}/">${escapeHtml(e.title)}</a>
+          ${e.description ? `<p class="desc">${escapeHtml(e.description)}</p>` : ''}
+        </div>
+        <time>${date}</time>
+      </li>`;
+}).join('\n');
+const tpl = fs.readFileSync('index.template.html', 'utf8');
 fs.mkdirSync(OUT, { recursive: true });
 fs.writeFileSync(path.join(OUT, 'index.html'),
-  `<!doctype html><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Paper Reading Slides</title>
-<style>
-body{font-family:system-ui;max-width:1000px;margin:3rem auto;padding:0 1rem;color:#1f2328}
-table{width:100%;border-collapse:collapse}
-th,td{text-align:left;padding:.6rem .8rem;border-bottom:1px solid #d1d9e0;vertical-align:top;line-height:1.5}
-th{background:#eef1f4;color:#59636e;font-size:.85em}
-a{color:#0969da;text-decoration:none;font-weight:600}
-</style>
-<h1>Paper Reading Slides</h1>
-<table><thead><tr><th>標題</th><th>簡介</th></tr></thead><tbody>${rowsHtml}</tbody></table>`);
+  tpl.replaceAll('{{COUNT}}', String(entries.length)).replace('{{ITEMS}}', () => items));
 
 function escapeHtml(s) {
   return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
