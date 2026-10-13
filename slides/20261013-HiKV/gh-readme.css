@@ -1,0 +1,156 @@
+/* @theme gh-readme */
+@import 'default';
+
+/* ========== 全域：配色變數、字型、頁面邊距 ========== */
+/* 顏色集中放在變數，之後想換色只改這裡 */
+section {
+  --fg: #1f2328;       /* 內文 */
+  --muted: #59636e;    /* 次要文字（頁尾、表頭） */
+  --line: #d1d9e0;     /* 邊框、分隔線 */
+  --soft: #f6f8fa;     /* 程式碼區塊底色 */
+  --accent: #0969da;   /* 強調色（麵包屑、引用、連結） */
+
+  background: #fff;
+  color: var(--fg);
+  font-family: Inter, "Noto Sans TC", -apple-system, sans-serif;
+  font-size: 24px;
+  line-height: 1.65;
+  padding: 92px 96px 76px;  /* 上方留給麵包屑，下方留給頁碼 */
+}
+
+/* ========== 標題：偏小字級 + 淡色底線，像 README ========== */
+h1, h2 {
+  font-size: 1.3em;
+  font-weight: 600;
+  line-height: 1.3;
+  margin: 0 0 0.8em;
+  padding-bottom: 0.4em;
+  border-bottom: 1px solid #e6e9ed;
+}
+
+/* ========== 行內小元件：清單符號、連結、粗體 ========== */
+li::marker { color: var(--muted); }            /* 清單符號改灰色 */
+a { color: var(--accent); text-decoration: none; }
+strong { font-weight: 600; }                   /* 不要太粗 */
+
+/* ========== 行內程式碼：灰底圓角小標籤 ========== */
+code {
+  font-family: "JetBrains Mono", ui-monospace, Menlo, monospace;
+  font-size: 0.85em;
+  background: #eef1f4;
+  border-radius: 6px;
+  padding: 0.1em 0.4em;
+}
+
+/* ========== 程式碼區塊：淺灰底 + 邊框 + 頂部三個小圓點 ========== */
+pre {
+  background: var(--soft);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 16px 24px 18px;
+}
+/* 用 ::before 畫圓點：一個圓加兩個 box-shadow 複製品 */
+pre::before {
+  content: "";
+  display: block;
+  width: 11px; height: 11px;
+  border-radius: 50%;
+  background: #d1d9e0;
+  box-shadow: 18px 0 #d1d9e0, 36px 0 #d1d9e0;
+  margin-bottom: 14px;
+}
+/* 區塊內的 code 要還原，不然會套到上面的行內樣式；
+   字型含 CJK 等寬，ASCII 示意圖的中英文才對得齊 */
+pre code {
+  background: none;
+  padding: 0;
+  font-family: "JetBrains Mono", "Noto Sans Mono CJK TC", ui-monospace, Menlo, monospace;
+  font-size: 0.8em;
+  line-height: 1.55;
+}
+
+/* ========== 表格：只有橫線，表頭淺灰底，寬度撐滿 ========== */
+/* 選擇器前面加 section，是為了權重贏過 Marp 預設主題 */
+section table {
+  display: table;
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.85em;
+}
+section table tr,
+section table tr:nth-child(2n) {   /* 取消預設的斑馬紋 */
+  background: none;
+}
+section table th,
+section table td {
+  border: 0;                        /* 去掉直線與外框 */
+  border-bottom: 1px solid var(--line);
+  padding: 0.45em 0.8em;
+  text-align: left;
+  background: none;
+}
+section table th {
+  background: #eef1f4;
+  color: var(--muted);
+  font-weight: 600;
+  font-size: 0.85em;
+}
+
+/* ========== 引用區塊：淡藍底 + 藍色左邊線，當重點提示框 ========== */
+blockquote {
+  margin: 0.9em 0 0;
+  padding: 0.4em 1em;
+  background: rgba(9, 105, 218, 0.07);
+  border-left: 4px solid var(--accent);
+  color: var(--fg);
+}
+blockquote p { margin: 0.2em 0; }
+
+/* ========== 頁首 / 頁尾 / 頁碼：等寬小字，位置對齊內容邊距 ========== */
+header, footer, section::after {
+  font-family: "JetBrains Mono", ui-monospace, Menlo, monospace;
+  font-size: 15px;
+}
+header { top: 36px; left: 96px; color: var(--accent); }    /* 麵包屑 */
+footer { bottom: 30px; left: 96px; color: var(--muted); }  /* 報告人 */
+section::after { bottom: 30px; right: 96px; color: var(--muted); }  /* 頁碼 */
+
+/* ========== 版型 cover：封面 / 結尾頁 ==========
+   用法：<!-- _class: cover -->
+   大標題、不畫底線、行內程式碼變成藍色藥丸（當 badge 用） */
+section.cover { padding-top: 170px; }
+section.cover h1 {
+  font-size: 2.5em;
+  font-weight: 700;
+  line-height: 1.2;
+  border: 0;
+  padding: 0;
+  margin: 0 0 0.5em;
+}
+section.cover p { color: var(--muted); margin: 0.4em 0; }
+section.cover code {
+  background: rgba(9, 105, 218, 0.1);
+  color: var(--accent);
+  border-radius: 999px;
+  padding: 0.12em 0.7em;
+  margin-right: 0.4em;
+}
+
+/* ========== 版型 fig：貼圖頁 ==========
+   用法：<!-- _class: fig -->
+   圖片自動吃掉標題與文字以外的剩餘空間，等比縮放不變形、不溢出 */
+section.fig { display: flex; flex-direction: column; }
+
+section.fig p:has(img) {       /* 含圖片的段落：撐滿剩餘高度並置中 */
+  flex: 1;
+  min-height: 0;               /* 讓 flex 子項可以縮小，不撐破頁面 */
+  margin: 0 0 0.6em;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+section.fig img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;   /* 等比縮放、不變形；大圖縮小、小圖放大到填滿框 */
+}
