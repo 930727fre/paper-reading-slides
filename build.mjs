@@ -60,7 +60,7 @@ for (const dir of fs.readdirSync(SRC, { withFileTypes: true })) {
 <style>${css}
 body{margin:0;font-family:system-ui,sans-serif;background:#f4f4f4}
 .row{display:grid;grid-template-columns:3fr 2fr;gap:1.5rem;max-width:1400px;margin:1.5rem auto;padding:0 1rem}
-.slide svg{width:100%;height:auto;box-shadow:0 2px 8px #0003;background:#fff}
+.slide .marpit>svg{width:100%;height:auto;box-shadow:0 2px 8px #0003;background:#fff}
 .note{line-height:1.7}
 @media(max-width:800px){.row{grid-template-columns:1fr}}
 </style>
@@ -79,7 +79,6 @@ ${rows}`;
 
 const rowsHtml = entries.sort((a, b) => b.name.localeCompare(a.name))
   .map(e => `<tr>
-    <td class="date">${escapeHtml(e.name)}</td>
     <td><a href="${e.name}/">${escapeHtml(e.title)}</a></td>
     <td>${escapeHtml(e.description)}</td></tr>`).join('');
 fs.mkdirSync(OUT, { recursive: true });
@@ -91,11 +90,10 @@ body{font-family:system-ui;max-width:1000px;margin:3rem auto;padding:0 1rem;colo
 table{width:100%;border-collapse:collapse}
 th,td{text-align:left;padding:.6rem .8rem;border-bottom:1px solid #d1d9e0;vertical-align:top;line-height:1.5}
 th{background:#eef1f4;color:#59636e;font-size:.85em}
-td.date{font:13px ui-monospace,monospace;color:#59636e;white-space:nowrap}
 a{color:#0969da;text-decoration:none;font-weight:600}
 </style>
 <h1>Paper Reading Slides</h1>
-<table><thead><tr><th>資料夾</th><th>標題</th><th>簡介</th></tr></thead><tbody>${rowsHtml}</tbody></table>`);
+<table><thead><tr><th>標題</th><th>簡介</th></tr></thead><tbody>${rowsHtml}</tbody></table>`);
 
 function escapeHtml(s) {
   return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
