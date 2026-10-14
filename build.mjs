@@ -62,9 +62,13 @@ body{margin:0;font-family:system-ui,sans-serif;background:#f4f4f4}
 .row{display:grid;grid-template-columns:3fr 2fr;gap:1.5rem;max-width:1400px;margin:1.5rem auto;padding:0 1rem}
 .slide .marpit>svg{width:100%;height:auto;box-shadow:0 2px 8px #0003;background:#fff}
 .note{line-height:1.7}
+.back{position:sticky;top:0;z-index:10;background:#f6f8fa;border-bottom:1px solid #d1d9e0}
+.back div{max-width:1400px;margin:0 auto;padding:.6rem 1rem}
+.back a{color:#0969da;text-decoration:none;font-weight:600;font-size:14px}
+.back a:hover{text-decoration:underline}
 @media(max-width:800px){.row{grid-template-columns:1fr}}
 </style>
-<p style="max-width:1400px;margin:1rem auto;padding:0 1rem"><a href="../">← 返回列表</a></p>
+<nav class="back"><div><a href="../">← 返回列表</a></div></nav>
 ${rows}`;
 
     const outDir = path.join(OUT, name);
