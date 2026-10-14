@@ -1,4 +1,3 @@
-throw new Error('test: 故意讓建置失敗');
 import fs from 'node:fs';
 import path from 'node:path';
 import { Marp } from '@marp-team/marp-core';
