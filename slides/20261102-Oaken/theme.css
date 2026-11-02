@@ -15,7 +15,7 @@ section {
   font-family: Inter, "Noto Sans TC", -apple-system, sans-serif;
   font-size: 24px;
   line-height: 1.65;
-  padding: 92px 96px 76px;  /* 上方留給麵包屑，下方留給頁碼 */
+  padding: 92px 96px 48px;  /* 上方留給麵包屑與頁碼，下方只留一點邊界 */
 }
 
 /* ========== 標題：偏小字級 + 淡色底線，像 README ========== */
@@ -113,7 +113,7 @@ header, footer, section::after {
 }
 header { top: 36px; left: 96px; color: var(--accent); }    /* 麵包屑 */
 footer { bottom: 30px; left: 96px; color: var(--muted); }  /* 報告人 */
-section::after { bottom: 30px; right: 96px; color: var(--muted); }  /* 頁碼 */
+section::after { top: 36px; bottom: auto; right: 96px; color: var(--muted); }  /* 頁碼：與麵包屑同一排，放右上 */
 
 /* ========== 版型 cover：封面 / 結尾頁 ==========
    用法：<!-- _class: cover -->
