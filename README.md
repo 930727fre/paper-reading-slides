@@ -38,6 +38,7 @@ slides/<date-name>/*.md ──(Marp)──> HTML ──(GitHub Actions)──> G
 ## Local preview
 
 ```bash
-marp -p --theme theme.css slides/20261013-HiKV/20261013-HiKV.md   # preview window
+cd slides/20261013-HiKV/
+marp -p --theme theme.css 20261013-HiKV.md   # preview window
 node build.mjs                                                        # full build into _site/
 ```
