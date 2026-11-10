@@ -33,7 +33,41 @@ slides/<date-name>/*.md ──(Marp)──> HTML ──(GitHub Actions)──> G
    ---
    ```
 
-3. Push, wait for Actions to finish, and the new deck appears on the index page.
+3. Start the deck with a cover slide (see [Cover slide format](#cover-slide-format)).
+4. Push, wait for Actions to finish, and the new deck appears on the index page.
+
+## Cover slide format
+
+The first slide of every deck is a cover. Use this template:
+
+```markdown
+<!-- _class: cover -->
+<!-- _paginate: false -->
+
+# Full paper title
+
+`Institution` `Venue Year` `arXiv 1234.56789`
+
+Author 1, Author 2, Author 3
+
+報告人：莊翔鈞
+
+<!--
+Speaker notes: who wrote it, where it was published, and the problem it tackles.
+-->
+```
+
+| Line | Content |
+|---|---|
+| `# Title` | Full paper title, same as `title` in the front matter |
+| Tag line | One backtick tag per item, in this order: institution(s), venue + year, then `arXiv <id>` |
+| Authors | Comma-separated, in paper order |
+| `報告人` | Presenter |
+
+Rules for the tag line:
+
+- Add the `arXiv` tag only if the paper has an arXiv version. Write the bare ID with no version suffix, e.g. `arXiv 2503.18599`.
+- Skip it for papers that have none (theses, conference-only papers). Don't leave an empty tag.
 
 ## Local preview
 
