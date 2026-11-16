@@ -26,9 +26,9 @@ for (const dir of fs.readdirSync(SRC, { withFileTypes: true })) {
   if (!dir.isDirectory()) continue;
   const name = dir.name;
   const dirPath = path.join(SRC, name);
-  const mdPath = path.join(dirPath, `${name}.md`);
+  const mdPath = path.join(dirPath, 'index.md');
   if (!fs.existsSync(mdPath)) {
-    console.warn(`略過 ${name}：找不到 ${name}.md`);
+    console.warn(`略過 ${name}：找不到 index.md`);
     continue;
   }
 
@@ -82,8 +82,8 @@ ${rows}`;
 }
 
 // 主頁：樣式與版面放在 index.template.html，這裡只負責填入清單
-const items = entries.sort((a, b) => b.name.localeCompare(a.name)).map(e => {
-  const m = e.name.match(/^(\d{4})(\d{2})(\d{2})/);       // 資料夾開頭的 YYYYMMDD 當日期
+const items = entries.sort((a, b) => dateKey(b.name).localeCompare(dateKey(a.name)) || a.name.localeCompare(b.name)).map(e => {
+  const m = e.name.match(/(\d{4})(\d{2})(\d{2})$/);       // 資料夾結尾的 YYYYMMDD 當日期
   const date = m ? `${m[1]}-${m[2]}-${m[3]}` : '';
   const q = escapeHtml(`${e.title} ${e.description}`.toLowerCase());
   return `      <li class="row" data-q="${q}">
@@ -98,6 +98,11 @@ const tpl = fs.readFileSync('index.template.html', 'utf8');
 fs.mkdirSync(OUT, { recursive: true });
 fs.writeFileSync(path.join(OUT, 'index.html'),
   tpl.replaceAll('{{COUNT}}', String(entries.length)).replace('{{ITEMS}}', () => items));
+
+function dateKey(name) {
+  const m = name.match(/(\d{8})$/);
+  return m ? m[1] : '';
+}
 
 function escapeHtml(s) {
   return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');

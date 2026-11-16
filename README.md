@@ -9,7 +9,7 @@ Slides for my biweekly paper-reading meetings.
 ## How it works
 
 ```text
-slides/<date-name>/*.md ──(Marp)──> HTML ──(GitHub Actions)──> GitHub Pages
+slides/<name-date>/index.md ──(Marp)──> HTML ──(GitHub Actions)──> GitHub Pages
 ```
 
 - **Marp** turns Markdown into slides. `build.mjs` renders each `.md` with `@marp-team/marp-core`, applies the `theme.css` theme from the same folder, and shows the `<!-- -->` speaker notes next to each slide.
@@ -19,7 +19,7 @@ slides/<date-name>/*.md ──(Marp)──> HTML ──(GitHub Actions)──> G
 
 ## Adding a slide deck
 
-1. Create `slides/YYYYMMDD-name/` containing `YYYYMMDD-name.md`, `theme.css`, and any images. The folder name must match the `.md` file name.
+1. Create `slides/name-YYYYMMDD/` containing `index.md`, `theme.css`, and any images. The date is read from the end of the folder name.
 2. Add `title` (full title) and `description` (one-line summary) to the front matter. The index page shows them directly:
 
    ```markdown
@@ -72,7 +72,7 @@ Rules for the tag line:
 ## Local preview
 
 ```bash
-cd slides/20261013-HiKV/
-marp -p --theme theme.css 20261013-HiKV.md   # preview window
+cd slides/HiKV-20261013/
+marp -p --theme theme.css index.md   # preview window
 node build.mjs                                                        # full build into _site/
 ```

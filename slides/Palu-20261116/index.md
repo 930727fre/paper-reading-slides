@@ -38,7 +38,7 @@ Chi-Chih Chang, Wei-Cheng Lin, Chien-Yu Lin, Chong-Yan Chen, Yu-Fang Hu, Pei-Shu
 
 ---
 
-## Low rank
+## Rank
 
 $$
 \underbrace{\begin{bmatrix}1&0&1\\0&1&1\\1&1&2\end{bmatrix}}_{W\ (3\times3)}
@@ -52,7 +52,7 @@ $$
 - rank 為 $r$：每個 row 只要 $r$ 個係數，不用 $n$ 個
 
 <!--
-先介紹兩個核心概念，low rank 跟 SVD。Rank 就是矩陣裡獨立方向的數量。投影片裡的例子，前兩個 row 是獨立的，第三個 row 是它們的和，所以只有兩個獨立方向，rank 是 2。這樣我們就可以用 A，也就是還原的係數，跟 B 這些獨立的向量，組合出原本的矩陣，這叫 low rank factorization。如果故意省掉一部分 rank，雖然沒辦法 lossless 還原，但像量化那樣，大致還原已經夠用了。問題是要留哪些方向，下一頁用 SVD 來回答。
+先介紹兩個核心概念，rank 跟 SVD。Rank 就是矩陣裡獨立方向的數量。投影片裡的例子，前兩個 row 是獨立的，第三個 row 是它們的和，所以只有兩個獨立方向，rank 是 2。這樣我們就可以用 A，也就是還原的係數，跟 B 這些獨立的向量，組合出原本的矩陣，這叫 low rank factorization。如果故意省掉一部分 rank，雖然沒辦法 lossless 還原，但像量化那樣，大致還原已經夠用了。問題是要留哪些方向，下一頁用 SVD 來回答。
 -->
 
 ---
@@ -104,19 +104,19 @@ Palu:      x ──A──▶ h ──B──▶ k      cache h  (r numbers)
 - cache 存 latent $h = xA$，要用 $k$ 的時候再算 $hB$；value 同理
 
 <!--
-Palu的做法就是善用前面提到的low rank和svd，原本 key 是 token x 乘上投影權重 W 得到 k，然後把 k 存進 cache，長度是 d。Palu會先離線對W做SVD，只保留前 r 個最大的方向，把 W 近似成 A 乘 B。A 把 token 投影成 r 個係數，也就是 latent h；B 就是那 r 個方向，用來還原 k。 所以 cache 存的是長度 r 的 h，不是長度 d 的 k。要做 attention 的時候，再用 B 把 k 還原出來。Value 也是同樣的做法，各有自己的 A 和 B。 svd 只需要離線做一次，因為 W 是固定的權重。 代價是每次要用 k 的時候多了還原這一步，後面會講怎麼fuse。
+Palu的做法就是善用前面提到的low rank和svd，原本 key 是 token x 乘上投影權重 W 得到 k，然後把 k 存進 cache，長度是 d。Palu會先離線對W做SVD，只保留前 r 個最大的方向，把 W 近似成 A 乘 B。A 把 token 投影成 r 個係數，也就是 latent h；B 就是那 r 個方向，用來還原 k。 所以 cache 存的是長度 r 的 h，不是長度 d 的 k。要做 attention 的時候，再用 B 把 k 還原出來。Value 也是同樣的做法，各有自己的 A 和 B。 svd 只需要離線做一次，因為 W 是固定的權重。 代價是每次要用 k 的時候多了還原這一步，後面會講怎麼處理。
 -->
 
 ---
 
-## Matrix fusion（Value 端）
+## Absorb（Value 端）
 
 $$
-p\,V\,W^o = p\,(H B)\,W^o = p\,H\,(\underbrace{B\,W^o}_{\text{離線先乘好}})
+p\,V\,W^o = p\,(H B)\,W^o = p\,H\,(\underbrace{B\,W^o}_{\text{absorbed offline}})
 $$
 
 - $p$：attention weight，$V$：value，$H$：cache 裡的 latent，$W^o$：output projection
-- $B$ 和 $W^o$ 都是固定的權重，可以離線先乘好
+- $B$ 和 $W^o$ 都是固定的權重，可以離線先乘好，也就是把 $B$ absorb 進 $W^o$
 - 執行時不用還原 value，直接用 latent $H$ 算
 
 <!--
@@ -125,35 +125,35 @@ $$
 
 ---
 
-## Matrix fusion（Key 端）
+## Absorb（Key 端）
 
 | | Attention score | 還原 $K$？ |
 |---|---|---|
-| 沒有 RoPE | $qK^\top = x\,(W^q B^\top)\,H^\top$ | 不用，$W^q B^\top$ 離線先乘好 |
+| 沒有 RoPE | $qK^\top = x\,(W^q B^\top)\,H^\top$ | 不用，$B^\top$ 離線 absorb 進 $W^q$ |
 | 有 RoPE（如 Llama） | $\mathrm{RoPE}(q)\,\mathrm{RoPE}(HB)^\top$ | 要，先還原 $K = HB$ 才能旋轉 |
 
 - $q = xW^q$：當前 token 的 query，$K = HB$
-- 有 RoPE：自訂 Triton kernel，把還原 $K$、RoPE、乘 $q$ 融成一個
+- 有 RoPE：自訂 Triton kernel，把還原 $K$、RoPE、乘 $q$ fuse 成一個
 
 <!--
-Key 這邊比較麻煩，要分有沒有 RoPE。Attention score 是 q 乘上 K transpose，K 是 H 乘 B。沒有 RoPE 的時候，展開之後是 x 乘 Wq 乘 Bᵀ 乘 Hᵀ，Wq 和 Bᵀ 都是固定的權重，可以離線先乘好，所以不用還原 K。 有 RoPE 的時候，像 Llama，q 和 K 在相乘之前都要先做 RoPE，也就是依照位置旋轉。因為旋轉要先把K還原出來，Wq 和 Bᵀ 沒辦法fuse。作者的workaround 是寫了一個 GPU kernel，把還原 K、做 RoPE、跟 q 相乘融在同一個 kernel 裡，盡量在on-chip完成，減少資料搬運。 ALiBi、MLA 這類不直接對 key 做位置編碼的架構，就屬於沒有 RoPE 的情況，可以直接 fuse。
+Key 這邊比較麻煩，要分有沒有 RoPE。Attention score 是 q 乘上 K transpose，K 是 H 乘 B。沒有 RoPE 的時候，展開之後是 x 乘 Wq 乘 Bᵀ 乘 Hᵀ，Wq 和 Bᵀ 都是固定的權重，可以離線先乘好，也就是把 Bᵀ absorb 進 Wq，所以不用還原 K。 有 RoPE 的時候，像 Llama，q 和 K 在相乘之前都要先做 RoPE，也就是依照位置旋轉。因為旋轉要先把K還原出來，Wq 和 Bᵀ 沒辦法 absorb。作者的workaround 是寫了一個 GPU kernel，把還原 K、做 RoPE、跟 q 相乘 fuse 在同一個 kernel 裡，盡量在on-chip完成，減少資料搬運。 ALiBi、MLA 這類不直接對 key 做位置編碼的架構，就屬於沒有 RoPE 的情況，可以直接 absorb。
 -->
 
 ---
 
 <!-- _class: fig -->
 
-## 分解粒度
+## 分解 granularity
 
 ![](fig3.png)
 
 <!--
-前面為了簡化，是用單一 head 來講。剛剛提到的做法都只發生在一個 head 裡面，每個 head 自己做分解，這個叫做 M-LRD，M 是 multi 的意思。作者推測 head 之間其實有一些資訊是共享的，所以嘗試了所有 head 的權重 concatenate 在一起，一塊做 SVD，這樣所有拼在一起的做法叫 J-LRD，J 是 joint 的意思。還有一個折衷的方法，每 s 個 head 作為一個 group，一塊做分解，叫 G-LRD，G 是 group 的意思。
+前面為了簡化，是用單一 head 來講，而且 SVD 都只發生在一個 head 裡面，每個 head 自己做分解，這個叫做 M-LRD，M 是 multi 的意思。作者推測 head 之間其實有一些資訊是共享的，所以嘗試了所有 head 的權重 concatenate 在一起，一塊做 SVD，這樣所有拼在一起的做法叫 J-LRD，J 是 joint 的意思。還有一個折衷的方法，每 s 個 head 作為一個 group，一塊做分解，叫 G-LRD，G 是 group 的意思。
 -->
 
 ---
 
-## 粒度的取捨
+## Granularity 的取捨
 
 | | 一起分解的 head | 準度 | 還原成本（相對 M-LRD） |
 |---|---|---|---|
@@ -215,7 +215,7 @@ $$
 
 ---
 
-## 分解粒度的準度
+## 分解 granularity 的準度
 
 50% 壓縮率；Palu 預設是 G-LRD（一組 4 個 head）
 
@@ -231,7 +231,7 @@ $$
 | | M-LRD | 12.38 | 23.02 | 58.40 |
 
 <!--
-先看分解粒度的結果，50% 壓縮率，Llama-2-7B 跟 Llama-3-8B-Instruct。Palu 預設用一組 4 個 head 的 G-LRD。
+先看分解 granularity 的結果，50% 壓縮率，Llama-2-7B 跟 Llama-3-8B-Instruct。Palu 預設用一組 4 個 head 的 G-LRD。
 結果跟前面講的一致：一起分解的 head 越多，準度越好。J-LRD 幾乎沒掉，zero-shot 平均只少 0.23；M-LRD 掉最多，掉了 7 分多，PPL 也從 5.47 變到 6.75；G-LRD 在中間，掉 2 分多。
 Llama-3 趨勢一樣，只是掉得更多。
 所以越準的做法，重建越貴，G-LRD 是在兩者之間取捨後的預設。
@@ -256,9 +256,9 @@ Llama-2-7B；PPL 在序列長度 4096 測，KV cache 換算成 128K 序列；Pal
 
 ---
 
-## 長文本準度
+## LongBench
 
-Mistral-7B-v0.2，LongBench；Bits 與壓縮率以 10K context 估算；Synthetic 為合成任務（長文本檢索類）
+Mistral-7B-v0.2；LongBench 各類任務的分數；Bits 與壓縮率以 10K context 估算
 
 | 方法 | Bits | 壓縮率 | Synthetic | Avg. |
 |---|---|---|---|---|
@@ -270,7 +270,7 @@ Mistral-7B-v0.2，LongBench；Bits 與壓縮率以 10K context 估算；Syntheti
 | Palu-50% | 3 | 10.6x | 18.57 | 35.71 |
 
 <!--
-這頁看長文本，LongBench，模型是 Mistral-7B。
+這頁看實際任務的表現，用 LongBench，涵蓋 QA、summarization、few-shot、code 等長文本任務，模型是 Mistral-7B。
 Palu-30% 的平均分數幾乎沒掉，再疊上 3-bit，合起來也只掉不到 2 分，壓縮率到 7.6 倍。跟 KIVI 比，準度差不多，但壓縮率多了一截，KIVI 大約 5 倍。
 但是壓到 50% 就撐不住了，掉最多的是 Synthetic，從 44.87 掉到 16.88，平均也被拖下來。
 -->
@@ -292,8 +292,8 @@ Palu-30% 的平均分數幾乎沒掉，再疊上 3-bit，合起來也只掉不�
 <!--
 最後看 latency。Llama-2-7B 跑在一張 RTX 4090，KV cache 壓 50%（Key 75%、Value 25%），不用 FlashAttention，另外 4090 記憶體小，所以 linear layer 的權重用 4-bit。
 序列短幾乎沒加速，越長越明顯。
-有 RoPE：Key 用 kernel 在線重建、Value 用 fusion，low rank 是 1.89 倍；加 4-bit 到 2.91 倍，但只能量化 Value，因為 Key 的 kernel 目前只支援 FP16。KIVI-4-bit 只有 1.89 倍，所以 Palu 加量化比 KIVI 快。
-沒有 RoPE：Key、Value 都能 fusion，重建成本完全消掉，low rank 是 2.20 倍，加 4-bit 到 6.17 倍。
+有 RoPE：Key 用 kernel 在線重建、Value 用 absorb，low rank 是 1.89 倍；加 4-bit 到 2.91 倍，但只能量化 Value，因為 Key 的 kernel 目前只支援 FP16。KIVI-4-bit 只有 1.89 倍，所以 Palu 加量化比 KIVI 快。
+沒有 RoPE：Key、Value 都能 absorb，重建成本完全消掉，low rank 是 2.20 倍，加 4-bit 到 6.17 倍。
 -->
 
 ---
@@ -303,13 +303,13 @@ Palu-30% 的平均分數幾乎沒掉，再疊上 3-bit，合起來也只掉不�
 - 離線把 $W_k$、$W_v$ 低秩分解，只存 latent，post-training、不用重訓
 - G-LRD 在準度與重建成本之間折衷；Fisher 分配 rank
 - 與量化正交：Hadamard 處理 latent 的 outliers，疊加後 KV cache 壓到 **5.6 GB**（Palu-30%、2-bit，PPL **5.76**）
-- Fusion 與 GPU kernel 讓壓縮變成 latency 加速：64K 時 attention module 最高 **6.17x**
+- Absorb 與 fused GPU kernel 讓壓縮變成 latency 加速：64K 時 attention module 最高 **6.17x**
 
 <!--
 總結一下。Palu 是 post-training 的 KV cache 壓縮：離線把 W_k 和 W_v 做低秩分解，cache 只存 latent，不用重訓。
-分解粒度選 G-LRD，在準度和重建成本之間折衷，rank 用 Fisher information 分配。
+分解 granularity 選 G-LRD，在準度和重建成本之間折衷，rank 用 Fisher information 分配。
 它跟量化互相獨立，用 Hadamard 把 latent 的 outliers 攤開，疊加之後 Llama-2-7B 在 128K 的 KV cache 從 64 GB 壓到 5.6 GB，PPL 是 5.76，baseline 是 5.12。
-Matrix fusion 加上 GPU kernel，讓壓縮真的變成 latency 加速，64K 的 attention module 最高 6.17 倍。
+Absorb 加上 fused GPU kernel，讓壓縮真的變成 latency 加速，64K 的 attention module 最高 6.17 倍。
 -->
 
 ---
